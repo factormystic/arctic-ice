@@ -1,0 +1,210 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset='utf-8'>
+
+	<link href="reset.css" rel="stylesheet" type="text/css" media="all">
+
+	<link href="//code.ionicframework.com/ionicons/1.4.1/css/ionicons.min.css" rel="stylesheet" type="text/css" media="all">
+	<link href="css-tabs.css" rel="stylesheet" type="text/css" media="all">
+	<script src="fonts.js" charset="utf-8"></script>
+
+	<style type="text/css">
+		body {
+			background-color: rgb(241, 241, 241);
+		}
+
+		h3 {
+			font-size: 3em;
+			font-family: 'Raleway', 'sans-serif';
+		}
+
+		.title {
+			margin: 0 auto;
+			width: 770px;
+			margin-top: 20px;
+		}
+
+		.wip {
+			text-align: center;
+			background: #555;
+			color: #FFF;
+			font-family: 'PT Serif', serif;
+			padding: 15px;
+			font-size: 15px;
+		}
+
+		.explanation {
+			font-family: 'PT Serif', serif;
+			padding: 20px;
+			margin-bottom: 1em;
+		}
+
+		.explanation .angle-explanation {
+			color: red;
+		}
+
+		.explanation .cos-explanation {
+			color: #758AFA;
+		}
+
+		.explanation .sin-explanation {
+			color: #44BD4E;
+		}
+
+		.explanation .center-left {
+			float: left;
+			margin-left: 204px;
+		}
+
+		.explanation .center-right {
+			float: left;
+			padding-left: 75px;
+		}
+
+		#chart {
+			position: relative;
+
+			width: 770px;
+			margin: 0 auto;
+			-webkit-user-select: none;
+
+			-webkit-box-shadow: 2px 2px 5px rgba(50, 50, 50, 0.65);
+			-moz-box-shadow:    2px 2px 5px rgba(50, 50, 50, 0.65);
+			box-shadow:         2px 2px 5px rgba(50, 50, 50, 0.65);
+
+			background-color: white;
+			border: 1px solid rgb(182, 182, 182);
+			margin-top: 20px;
+		}
+
+		#chart .svg {
+			height: 520;
+		}
+
+		#chart canvas {			
+			margin-left: -95px;
+			margin-top: 20px;
+		}
+
+		#chart text {
+			cursor: default;
+		}
+
+		text {
+			font-family: 'Rockwell', 'Arvo', 'Courier New', 'serif';
+			/*font-family: 'Arvo', 'Courier New', 'serif';*/
+		}
+
+		#under-chart {
+			position: relative;
+
+			width: 770px;
+			margin: 0 auto;
+			margin-top: 20px;
+		}
+
+		#under-chart .donate {
+			height: 50px;
+			margin-left: 280px
+		}
+
+		#under-chart .donate form {
+			float: left;
+			padding-top: 5px;
+		}
+		#under-chart .donate iframe {
+			float: left;
+		}
+	</style>
+
+	<style type="text/css">
+		
+	</style>
+</head>
+<body>
+	<div class="title">
+		<h3>Title goes here</h3>
+	</div>
+
+	<div id="chart">
+		<div class="wip">
+			<i style="float:left; color:#ff0;" class="ion-alert-circled"></i> Work In Progress <i style="float:right; color:#ff0;" class="ion-alert-circled"></i>
+		</div>
+
+		<div class="svg">chart</div>
+		
+		<hr />
+
+		<div class="explanation">
+			<div class="tabGroup">
+				<input type="radio" name="tabGroup1" id="rad1" class="tab1" checked="checked"/>
+				<label for="rad1">Explanation</label>
+			 
+				<input type="radio" name="tabGroup1" id="rad2" class="tab2"/>
+				<label for="rad2">Behind the Scenes</label>
+				 
+				<br/>
+				<br/>
+			 
+				<div class="tab1">
+					explanation goes here
+				</div>
+
+				<div class="tab2">
+					behind the scenes goes here
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="under-chart">
+		<div class="donate">
+		<!--
+			<form style="display:inline-block" action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+				<input type="hidden" name="cmd" value="_s-xclick">
+				<input type="hidden" name="hosted_button_id" value="BPHSDWJVQCFHG">
+				<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+				<img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
+			</form>
+
+			<a style="display:inline-block" class="coinbase-button" data-code="5fafd889d85c04e275fdb6b49005322a" data-button-style="donation_small" href="https://coinbase.com/checkouts/5fafd889d85c04e275fdb6b49005322a">Donate Bitcoins</a>
+			<script src="https://coinbase.com/assets/button.js" type="text/javascript"></script>
+		-->
+		</div>
+
+		<div id="comments"></div>
+<!--
+ 		<script type="text/javascript">
+ 			var disqus_identifier = "                     ";
+ 			var disqus_title = "                   ";
+ 			var disqus_container_id = "comments";
+ 		</script>
+		<script type="text/javascript">
+			(function() {
+			var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+			dsq.src = 'http://factormystic.disqus.com/embed.js';
+			(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+			})();
+		</script>
+		<a style="opacity:0.2" href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+	</div>
+
+	<script src="d3.min.js" type="text/javascript" charset="utf-8"></script>
+
+	<!-- Google Analytics -->
+<!--
+	<script type="text/javascript">
+		var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+		document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+	</script>
+	<script type="text/javascript">
+		try {
+			var pageTracker = _gat._getTracker("UA-9657745-2");
+			pageTracker._trackPageview();
+		} catch(err) {}
+	</script>
+-->
+</body>
+</html>
