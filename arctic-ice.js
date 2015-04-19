@@ -67,4 +67,32 @@ d3.csv("data/NH_seaice_extent_final.csv", function(d, i) {
 				.attr("d", function(year) {
 					return line(dataPointsByYear[year]);
 				});
+
+	var _1978_2009_byDayOfYear = _.groupBy(_.filter(rows, function(d) {
+		return d.date.getFullYear() <= 2009 && d3.time.dayOfYear(d.date) % 3 == 0;
+	}), function(d) {
+		return d3.time.dayOfYear(d.date);
+	});
+
+	var _1978_2009_avg = _.map(_1978_2009_byDayOfYear, function(days, doy) {
+		return {
+			day_of_year: +doy,
+			avg_extent: _.sum(days, 'extent') / days.length,
+		};
+	});
+
+	chart.selectAll(".average-doy")
+		.data(_1978_2009_avg)
+		.enter()
+			.append("circle")
+				.attr("class", "average-doy")
+				.attr("cx", function(d) {
+					return scale.x(d.day_of_year);
+				})
+				.attr("cy", function(d) {
+					return scale.y(d.avg_extent);
+				})
+				.attr("r", 1.4);
+
+
 });
