@@ -31,7 +31,7 @@ var line = d3.svg.line()
 		return scale.y(d.extent);
 	});
 
-d3.csv("data/NH_seaice_extent_final.csv", function(d, i) {
+var createDataPoint = function(d, i) {
 	// don't process the header row, which isn't data
 	if (i == 0)
 		return;
@@ -44,16 +44,9 @@ d3.csv("data/NH_seaice_extent_final.csv", function(d, i) {
 		date: new Date(+d["Year"], +d[" Month"]-1, +d[" Day"]),
 		extent: +d["     Extent"],
 	};
-}, function(error, rows) {
-	if (error) {
-		throw error;
-	}
+};
 
-	// sanity check
-	if (rows.length != 11586) {
-		throw new Error("um, some data is missing?");
-	}
-
+var drawChart = function(rows) {
 	var dataPointsByYear = _.groupBy(rows, function(d) {
 		return d.date.getFullYear();
 	});
@@ -66,6 +59,9 @@ d3.csv("data/NH_seaice_extent_final.csv", function(d, i) {
 				.classed("year-line", true)
 				.classed("highlight", function(year) {
 					return _.include(["2010", "2011", "2012", "2013", "2014"], year);
+				})
+				.classed("current-year", function(year) {
+					return year == "2015";
 				})
 				.attr("d", function(year) {
 					return line(dataPointsByYear[year]);
@@ -96,6 +92,39 @@ d3.csv("data/NH_seaice_extent_final.csv", function(d, i) {
 					return scale.y(d.avg_extent);
 				})
 				.attr("r", 1.4);
+};
 
+var final_rows = [];
+var nrt_rows = [];
 
+d3.csv("data/NH_seaice_extent_final.csv", createDataPoint, function(error, rows) {
+	if (error) {
+		throw error;
+	}
+
+	// sanity check
+	if (rows.length != 11586) {
+		throw new Error("um, some data is missing?");
+	}
+
+	final_rows = rows;
+	if (final_rows.length && nrt_rows.length) {
+		drawChart([].concat(final_rows, nrt_rows));
+	}
+});
+
+d3.csv("data/NH_seaice_extent_nrt.csv", createDataPoint, function(error, rows) {
+	if (error) {
+		throw error;
+	}
+
+	// sanity check
+	if (rows.length != 107) {
+		throw new Error("um, some data is missing?");
+	}
+
+	nrt_rows = rows;
+	if (final_rows.length && nrt_rows.length) {
+		drawChart([].concat(final_rows, nrt_rows));
+	}
 });
