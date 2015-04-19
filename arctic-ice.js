@@ -40,7 +40,8 @@ d3.csv("data/NH_seaice_extent_final.csv", function(d, i) {
 	// "Spaces are considered part of a field and should not be ignored."
 	// there's weird spacing in the original dataset, hence the weird spaces here
 	return {
-		date: new Date(+d["Year"], +d[" Month"], +d[" Day"]),
+		// javascript's date constructor's month property is 0-based. why. whyyyyyyyyyyyyyyyyyyyyy
+		date: new Date(+d["Year"], +d[" Month"]-1, +d[" Day"]),
 		extent: +d["     Extent"],
 	};
 }, function(error, rows) {
