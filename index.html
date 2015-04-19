@@ -119,12 +119,15 @@
 	</style>
 
 	<style type="text/css">
-		
+		.year-line {
+			stroke: #4682B4;
+			fill: transparent;
+		}
 	</style>
 </head>
 <body>
 	<div class="title">
-		<h3>Title goes here</h3>
+		<h3>Arctic Sea Ice</h3>
 	</div>
 
 	<div id="chart">
@@ -132,8 +135,8 @@
 			<i style="float:left; color:#ff0;" class="ion-alert-circled"></i> Work In Progress <i style="float:right; color:#ff0;" class="ion-alert-circled"></i>
 		</div>
 
-		<div class="svg">chart</div>
-		
+		<div class="svg"></div>
+
 		<hr />
 
 		<div class="explanation">
@@ -175,11 +178,11 @@
 
 		<div id="comments"></div>
 <!--
- 		<script type="text/javascript">
- 			var disqus_identifier = "                     ";
- 			var disqus_title = "                   ";
- 			var disqus_container_id = "comments";
- 		</script>
+		<script type="text/javascript">
+			var disqus_identifier = "arctic-sea-ice";
+			var disqus_title = "Arctic Sea Ice";
+			var disqus_container_id = "comments";
+		</script>
 		<script type="text/javascript">
 			(function() {
 			var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
@@ -192,6 +195,9 @@
 	</div>
 
 	<script src="d3.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="lodash.min.js" type="text/javascript" charset="utf-8"></script>
+
+	<script src="arctic-ice.js" type="text/javascript" charset="utf-8"></script>
 
 	<!-- Google Analytics -->
 <!--
