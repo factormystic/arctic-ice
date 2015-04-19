@@ -63,7 +63,10 @@ d3.csv("data/NH_seaice_extent_final.csv", function(d, i) {
 		.data(_.keys(dataPointsByYear))
 		.enter()
 			.append("path")
-				.attr("class", "year-line")
+				.classed("year-line", true)
+				.classed("highlight", function(year) {
+					return _.include(["2010", "2011", "2012", "2013", "2014"], year);
+				})
 				.attr("d", function(year) {
 					return line(dataPointsByYear[year]);
 				});
