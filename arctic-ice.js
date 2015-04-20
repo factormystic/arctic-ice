@@ -166,6 +166,185 @@ var drawChart = function(rows) {
 					}
 				}
 			});
+
+	// chart title
+	chart.append("g")
+		.attr("transform", "translate(750,20)")
+		.append("text")
+			.attr("class", "right bold")
+			.text("Yearly fluctuations in area\nof Arctic covered by ice")
+			.each(function() {
+				var el = d3.select(this);
+				var words = d3.select(this).text().split("\n");
+				el.text("");
+
+				for (var i = 0; i < words.length; i++) {
+					var tspan = el.append("tspan")
+						.text(words[i]);
+
+					if (i > 0) {
+						tspan.attr("x", 0)
+							.attr("dy", "15");
+					}
+				}
+			});
+
+	// subtitle
+	chart.append("g")
+		.attr("transform", "translate(750,50)")
+		.append("text")
+			.attr("class", "right smaller")
+			.text("Millions of sq. km");
+
+	// line explanation
+	chart.append("g")
+		.attr("transform", "translate(330,50)")
+		.append("text")
+			.attr("class", "smaller gray")
+			.text("Each line represents one yearly\ncycle of sea ice fluctuations. The\ndotted line represents the average\nice extent from 1981 through 2009")
+			.each(function() {
+				var el = d3.select(this);
+				var words = d3.select(this).text().split("\n");
+				el.text("");
+
+				for (var i = 0; i < words.length; i++) {
+					var tspan = el.append("tspan")
+						.text(words[i]);
+
+					if (i > 0) {
+						tspan.attr("x", 0)
+							.attr("dy", "15");
+					}
+				}
+			});
+
+	// 1979 max
+	chart.append("g")
+		.attr("transform", "translate(230,50)")
+		.append("text")
+			.attr("class", "grayer")
+			.text("1979");
+
+	// 1980 min
+	chart.append("g")
+		.attr("transform", "translate(530,265)")
+		.append("text")
+			.attr("class", "grayer")
+			.text("1980");
+
+	// annual max
+	chart.append("g")
+		.attr("transform", "translate(180,150)")
+		.append("text")
+			.attr("class", "smaller gray")
+			.text("Arctic ice cover\nusually reaches\nan annual\nmaximum\naround March")
+			.each(function() {
+				var el = d3.select(this);
+				var words = d3.select(this).text().split("\n");
+				el.text("");
+
+				for (var i = 0; i < words.length; i++) {
+					var tspan = el.append("tspan")
+						.text(words[i]);
+
+					if (i > 0) {
+						tspan.attr("x", 0)
+							.attr("dy", "15");
+					}
+				}
+			});
+
+	// annual min
+	chart.append("g")
+		.attr("transform", "translate(520,180)")
+		.append("text")
+			.attr("class", "smaller gray")
+			.text("Ice cover usually\nshrinks to its\nminimum in\nSeptember")
+			.each(function() {
+				var el = d3.select(this);
+				var words = d3.select(this).text().split("\n");
+				el.text("");
+
+				for (var i = 0; i < words.length; i++) {
+					var tspan = el.append("tspan")
+						.text(words[i]);
+
+					if (i > 0) {
+						tspan.attr("x", 0)
+							.attr("dy", "15");
+					}
+				}
+			});
+
+	// 2010-2014 explanation
+	chart.append("g")
+		.attr("transform", "translate(310,260)")
+		.append("text")
+			.attr("class", "smaller green bold")
+			.text("Ice extent for\n2010 through 2014\nis shown with\ngreen lines")
+			.each(function() {
+				var el = d3.select(this);
+				var words = d3.select(this).text().split("\n");
+				el.text("");
+
+				for (var i = 0; i < words.length; i++) {
+					var tspan = el.append("tspan")
+						.text(words[i]);
+
+					if (i > 0) {
+						tspan.attr("x", 0)
+							.attr("dy", "15");
+					}
+				}
+			});
+
+	// all time minimum
+	chart.append("g")
+		.attr("transform", "translate(620,370)")
+		.append("text")
+			.attr("class", "bold")
+			.text("2012");
+
+	chart.append("g")
+		.attr("transform", "translate(620,385)")
+		.append("text")
+			.attr("class", "smaller gray")
+			.text("Arctic ice extent\nreached the lowest\npoint on record")
+			.each(function() {
+				var el = d3.select(this);
+				var words = d3.select(this).text().split("\n");
+				el.text("");
+
+				for (var i = 0; i < words.length; i++) {
+					var tspan = el.append("tspan")
+						.text(words[i]);
+
+					if (i > 0) {
+						tspan.attr("x", 0)
+							.attr("dy", "15");
+					}
+				}
+			});
+
+	// 2015
+	chart.append("g")
+		.attr("transform", "translate(120,155)")
+		.append("text")
+			.attr("class", "bold")
+			.text("2015");
+
+	// 2015 maximum
+	chart.append("g")
+		.attr("transform", "translate(195,25)")
+		.append("text")
+			.attr("class", "right bold")
+			.text("Feb. 25");
+
+	chart.append("g")
+		.attr("transform", "translate(195,40)")
+		.append("text")
+			.attr("class", "right smaller gray")
+			.text("2015 maximum");
 };
 
 var final_rows = [];
