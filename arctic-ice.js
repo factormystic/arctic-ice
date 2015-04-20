@@ -1,21 +1,29 @@
 var size = {
-	width: 650,
-	height: 400,
+	width: 660,
+	height: 460,
 
-	padding: 60,
+	padding: {
+		left: 90,
+		right: 20,
+		top: 40,
+		bottom: 20,
+	},
 };
 
-size.outer_width = size.width + size.padding * 2;
-size.outer_height = size.height + size.padding * 2;
+size.padding.horizontal = size.padding.left + size.padding.right;
+size.padding.vertical = size.padding.top + size.padding.bottom;
+
+size.outer_width = size.width + size.padding.horizontal;
+size.outer_height = size.height + size.padding.vertical;
 
 var scale = {
 	x: d3.scale.linear()
 		.domain([0, 364])
-		.range([size.padding, size.outer_width-size.padding]),
+		.range([size.padding.left+5, size.outer_width-size.padding.right]),
 
 	y: d3.scale.linear()
 		.domain([0, 18])
-		.range([size.outer_height-size.padding, size.padding]),
+		.range([size.outer_height-size.padding.vertical, size.padding.bottom]),
 };
 
 var chart = d3.select("#chart .svg").append("svg")
