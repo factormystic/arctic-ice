@@ -24,6 +24,42 @@ var scale = {
 	y: d3.scale.linear()
 		.domain([0, 18])
 		.range([size.outer_height-size.padding.vertical, size.padding.bottom]),
+
+	x_axis: d3.time.scale()
+		.domain([new Date(1900, 0, 1), new Date(1900, 11, 31)])
+		.range([size.padding.left+5, size.outer_width-size.padding.right]),
+};
+
+var axis = {
+	x: d3.svg.axis()
+		.scale(scale.x_axis)
+		.orient("bottom")
+		.ticks(d3.time.months)
+		.tickSize(16, 0)
+		.tickFormat(d3.time.format("%b")),
+
+	y: d3.svg.axis()
+		.scale(scale.y)
+		.orient("left")
+		.tickValues([0.424, 1.723, 4, 6, 8, 9.976140, 12, 14, 16, 18])
+		.tickFormat(function(d) {
+			switch (d) {
+				case 18:
+					return "18 million\nsq. km";
+
+				case 9.976140:
+					return "Size of\nCanada";
+
+				case 1.723:
+					return "Size of\nAlaska";
+
+				case 0.424:
+					return "Size of\nCalifornia";
+
+				default:
+					return d;
+			}
+		}),
 };
 
 var chart = d3.select("#chart .svg").append("svg")
@@ -100,6 +136,36 @@ var drawChart = function(rows) {
 					return scale.y(d.avg_extent);
 				})
 				.attr("r", 1.4);
+
+	// axes go in g element containers so they can be positioned easier
+	chart.append("g")
+		.classed("x-axis", true)
+		.attr("transform", "translate(0,"+ (size.height) +")")
+		.call(axis.x)
+		.selectAll("text")
+			.attr("dx", "12px");
+
+	chart.append("g")
+		.classed("y-axis", true)
+		.attr("transform", "translate("+ (size.padding.left) +","+ 0 +")")
+		.call(axis.y)
+		.selectAll("text")
+			.each(function (d) {
+				var el = d3.select(this);
+				var words = d3.select(this).text().split("\n");
+				el.text("");
+
+				for (var i = 0; i < words.length; i++) {
+					var tspan = el.append("tspan")
+						.text(words[i]);
+
+					if (i > 0) {
+						tspan.attr("x", 0)
+							.attr("dx", "-9") // right align the text visually
+							.attr("dy", "15");
+					}
+				}
+			});
 };
 
 var final_rows = [];
