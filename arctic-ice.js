@@ -188,6 +188,73 @@ var drawChart = function(rows) {
 				}
 			});
 
+	// summer season marker
+	var winter_gradient = chart.append("defs")
+		.append("linearGradient")
+			.attr("id", "summer")
+			.attr("x1", "0%")
+			.attr("y1", "100%")
+			.attr("x2", "0%")
+			.attr("y2", "5%");
+
+	winter_gradient.append("stop")
+		.attr("offset", "0%")
+		.style("stop-color", "rgb(255, 255, 227)");
+
+	winter_gradient.append("stop")
+		.attr("offset", "100%")
+		.style("stop-color", "#fff");
+
+	chart.append("rect")
+		.attr("x", scale.x(151))
+		.attr("y", scale.y(0)-51)
+		.attr("width", scale.x(242) - scale.x(151))
+		.attr("height", 50)
+		.attr("fill", "url(#summer)");
+
+	chart.append("g")
+		.attr("transform", "translate("+ (scale.x(151)+48) +","+ (scale.y(0)-10) +")")
+		.append("text")
+			.attr("class", "season-label")
+			.text("SUMMER");
+
+	// winter season markers
+	var winter_gradient = chart.append("defs")
+		.append("linearGradient")
+			.attr("id", "winter")
+			.attr("x1", "0%")
+			.attr("y1", "100%")
+			.attr("x2", "0%")
+			.attr("y2", "5%");
+
+	winter_gradient.append("stop")
+		.attr("offset", "0%")
+		.style("stop-color", "rgb(235, 245, 245)");
+
+	winter_gradient.append("stop")
+		.attr("offset", "100%")
+		.style("stop-color", "#fff");
+
+	chart.append("rect")
+		.attr("x", scale.x(333))
+		.attr("y", scale.y(0)-51)
+		.attr("width", scale.x(364) - scale.x(333))
+		.attr("height", 50)
+		.attr("fill", "url(#winter)");
+
+	chart.append("rect")
+		.attr("x", scale.x(0))
+		.attr("y", scale.y(0)-51)
+		.attr("width", scale.x(59) - scale.x(0))
+		.attr("height", 50)
+		.attr("fill", "url(#winter)");
+
+	chart.append("g")
+		.attr("transform", "translate("+ (scale.x(0)+21) +","+ (scale.y(0)-10) +")")
+		.append("text")
+			.attr("class", "season-label")
+			.text("WINTER");
+
 	// chart title
 	chart.append("g")
 		.attr("transform", "translate(750,20)")
