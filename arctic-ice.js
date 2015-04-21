@@ -84,6 +84,21 @@ var callout_line = d3.svg.line()
 		return d[1];
 	});
 
+var group = {
+	old_data: 0,
+	recent_data: 4000,
+	nrt_data: 8000,
+	key_points: 12000,
+};
+
+var fade = function(selection, delay_fn_or_value) {
+	return selection
+		.style("opacity", 0)
+			.transition()
+				.delay(delay_fn_or_value)
+				.style("opacity", 1);
+};
+
 var createDataPoint = function(d, i) {
 	// don't process the header row, which isn't data
 	if (i == 0)
@@ -99,65 +114,7 @@ var createDataPoint = function(d, i) {
 	};
 };
 
-var drawChart = function(rows) {
-	var dataPointsByYear = _.groupBy(rows, function(d) {
-		return d.date.getFullYear();
-	});
-
-	// since this chart isn't dynamic, we don't need to piece out the update/entering/exiting selections
-	chart.selectAll(".year-line")
-		.data(_.keys(dataPointsByYear))
-		.enter()
-			.append("path")
-				.classed("year-line", true)
-				.classed("highlight", function(year) {
-					return _.include(["2010", "2011", "2012", "2013", "2014"], year);
-				})
-				.classed("current-year", function(year) {
-					return year == "2015";
-				})
-				.attr("d", function(year) {
-					return line(dataPointsByYear[year]);
-				});
-
-	// the last data point
-	chart.append("circle")
-		.datum(_.last(dataPointsByYear[2015]))
-		.attr("class", "black-dot")
-		.attr("cx", function(d) {
-			return scale.x(d3.time.dayOfYear(d.date));
-		})
-		.attr("cy", function(d) {
-			return scale.y(d.extent);
-		})
-		.attr("r", 2);
-
-	var _1978_2009_byDayOfYear = _.groupBy(_.filter(rows, function(d) {
-		return d.date.getFullYear() <= 2009 && d3.time.dayOfYear(d.date) % 3 == 0;
-	}), function(d) {
-		return d3.time.dayOfYear(d.date);
-	});
-
-	var _1978_2009_avg = _.map(_1978_2009_byDayOfYear, function(days, doy) {
-		return {
-			day_of_year: +doy,
-			avg_extent: _.sum(days, 'extent') / days.length,
-		};
-	});
-
-	chart.selectAll(".average-doy")
-		.data(_1978_2009_avg)
-		.enter()
-			.append("circle")
-				.attr("class", "average-doy")
-				.attr("cx", function(d) {
-					return scale.x(d.day_of_year);
-				})
-				.attr("cy", function(d) {
-					return scale.y(d.avg_extent);
-				})
-				.attr("r", 1.4);
-
+var drawAxes = function() {
 	// axes go in g element containers so they can be positioned easier
 	chart.append("g")
 		.classed("x-axis", true)
@@ -283,6 +240,75 @@ var drawChart = function(rows) {
 		.append("text")
 			.attr("class", "right smaller")
 			.text("Millions of sq. km");
+};
+
+var drawChart = function(rows) {
+	var dataPointsByYear = _.groupBy(rows, function(d) {
+		return d.date.getFullYear();
+	});
+
+	// since this chart isn't dynamic, we don't need to piece out the update/entering/exiting selections
+	chart.selectAll(".year-line")
+		.data(_.keys(dataPointsByYear))
+		.enter()
+			.append("path")
+				.classed("year-line", true)
+				.classed("highlight", function(year) {
+					return _.include(["2010", "2011", "2012", "2013", "2014"], year);
+				})
+				.classed("current-year", function(year) {
+					return year == "2015";
+				})
+				.attr("d", function(year) {
+					return line(dataPointsByYear[year]);
+				})
+				.call(fade, function(d) {
+					if (d == 2015)
+						return group.nrt_data;
+					if (d <= 2014 && d >= 2010)
+						return group.recent_data;
+					return group.old_data;
+				});
+
+	// the last data point
+	chart.append("circle")
+		.datum(_.last(dataPointsByYear[2015]))
+		.attr("class", "black-dot")
+		.attr("cx", function(d) {
+			return scale.x(d3.time.dayOfYear(d.date));
+		})
+		.attr("cy", function(d) {
+			return scale.y(d.extent);
+		})
+		.attr("r", 2)
+		.call(fade, group.nrt_data);
+
+	var _1978_2009_byDayOfYear = _.groupBy(_.filter(rows, function(d) {
+		return d.date.getFullYear() <= 2009 && d3.time.dayOfYear(d.date) % 3 == 0;
+	}), function(d) {
+		return d3.time.dayOfYear(d.date);
+	});
+
+	var _1978_2009_avg = _.map(_1978_2009_byDayOfYear, function(days, doy) {
+		return {
+			day_of_year: +doy,
+			avg_extent: _.sum(days, 'extent') / days.length,
+		};
+	});
+
+	chart.selectAll(".average-doy")
+		.data(_1978_2009_avg)
+		.enter()
+			.append("circle")
+				.attr("class", "average-doy")
+				.attr("cx", function(d) {
+					return scale.x(d.day_of_year);
+				})
+				.attr("cy", function(d) {
+					return scale.y(d.avg_extent);
+				})
+				.attr("r", 1.4)
+				.call(fade, group.old_data);
 
 	// line explanation
 	chart.append("g")
@@ -304,36 +330,42 @@ var drawChart = function(rows) {
 							.attr("dy", "15");
 					}
 				}
-			});
+			})
+			.call(fade, group.old_data);
 
 	chart.append("path")
 		.attr("class", "black-line")
 		.datum([[388,105], [388,167]])
-		.attr("d", callout_line);
+		.attr("d", callout_line)
+		.call(fade, group.old_data);
 
 	// 1979 max
 	chart.append("g")
 		.attr("transform", "translate(230,50)")
 		.append("text")
 			.attr("class", "grayer")
-			.text("1979");
+			.text("1979")
+			.call(fade, group.old_data);
 
 	chart.append("path")
 		.attr("class", "grayer-line")
 		.datum([[240,52], [240,62]])
-		.attr("d", callout_line);
+		.attr("d", callout_line)
+		.call(fade, group.old_data);
 
 	// 1980 min
 	chart.append("g")
 		.attr("transform", "translate(530,265)")
 		.append("text")
 			.attr("class", "grayer")
-			.text("1980");
+			.text("1980")
+			.call(fade, group.old_data);
 
 	chart.append("path")
 		.attr("class", "grayer-line")
 		.datum([[540,267], [540,276]])
-		.attr("d", callout_line);
+		.attr("d", callout_line)
+		.call(fade, group.old_data);
 
 	// annual max
 	chart.append("g")
@@ -355,12 +387,14 @@ var drawChart = function(rows) {
 							.attr("dy", "15");
 					}
 				}
-			});
+			})
+			.call(fade, group.old_data);
 
 	chart.append("path")
 		.attr("class", "grayer-line")
 		.datum([[190,127], [190,132], [265,132], [265,127]])
-		.attr("d", callout_line);
+		.attr("d", callout_line)
+		.call(fade, group.old_data);
 
 	// annual min
 	chart.append("g")
@@ -382,12 +416,14 @@ var drawChart = function(rows) {
 							.attr("dy", "15");
 					}
 				}
-			});
+			})
+			.call(fade, group.old_data);
 
 	chart.append("path")
 		.attr("class", "grayer-line")
 		.datum([[520,240], [520,235], [585,235], [585,240]])
-		.attr("d", callout_line);
+		.attr("d", callout_line)
+		.call(fade, group.old_data);
 
 	// 2010-2014 explanation
 	chart.append("g")
@@ -409,14 +445,16 @@ var drawChart = function(rows) {
 							.attr("dy", "15");
 					}
 				}
-			});
+			})
+			.call(fade, group.recent_data);
 
 	// all time minimum
 	chart.append("g")
 		.attr("transform", "translate(620,370)")
 		.append("text")
 			.attr("class", "bold")
-			.text("2012");
+			.text("2012")
+			.call(fade, group.key_points);
 
 	chart.append("g")
 		.attr("transform", "translate(620,385)")
@@ -437,54 +475,63 @@ var drawChart = function(rows) {
 							.attr("dy", "15");
 					}
 				}
-			});
+			})
+			.call(fade, group.key_points);
 
 	chart.append("path")
 		.attr("class", "black-line")
 		.datum([[615,400], [561,400], [561,378]])
-		.attr("d", callout_line);
+		.attr("d", callout_line)
+		.call(fade, group.key_points);
 
 	chart.append("circle")
 		.attr("class", "black-dot")
 		.attr("cx", 561)
 		.attr("cy", 379)
-		.attr("r", 2);
+		.attr("r", 2)
+		.call(fade, group.key_points);
 
 	// 2015
 	chart.append("g")
 		.attr("transform", "translate(120,155)")
 		.append("text")
 			.attr("class", "bold")
-			.text("2015");
+			.text("2015")
+			.call(fade, group.nrt_data);
 
 	chart.append("path")
 		.attr("class", "black-line")
 		.datum([[138,140], [138,118]])
-		.attr("d", callout_line);
+		.attr("d", callout_line)
+		.call(fade, group.nrt_data);
 
 	// 2015 maximum
 	chart.append("g")
 		.attr("transform", "translate(195,25)")
 		.append("text")
 			.attr("class", "right bold")
-			.text("Feb. 25");
+			.text("Feb. 25")
+			.call(fade, group.key_points);
 
 	chart.append("g")
 		.attr("transform", "translate(195,40)")
 		.append("text")
 			.attr("class", "right smaller gray")
-			.text("2015 maximum");
+			.text("2015 maximum")
+			.call(fade, group.key_points);
 
 	chart.append("path")
 		.attr("class", "black-line")
 		.datum([[190,45], [190,105]])
-		.attr("d", callout_line);
+		.attr("d", callout_line)
+		.call(fade, group.key_points);
 
 	chart.append("circle")
 		.attr("class", "white-dot")
 		.attr("cx", 190)
 		.attr("cy", 105)
-		.attr("r", 4);
+		.attr("r", 4)
+		.call(fade, group.key_points);
 };
 
 var final_rows = [];
@@ -521,3 +568,5 @@ d3.csv("data/NH_seaice_extent_nrt.csv", createDataPoint, function(error, rows) {
 		drawChart([].concat(final_rows, nrt_rows));
 	}
 });
+
+drawAxes();
