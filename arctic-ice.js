@@ -75,6 +75,15 @@ var line = d3.svg.line()
 		return scale.y(d.extent);
 	});
 
+var callout_line = d3.svg.line()
+	.interpolate("linear")
+	.x(function(d) {
+		return d[0];
+	})
+	.y(function(d) {
+		return d[1];
+	});
+
 var createDataPoint = function(d, i) {
 	// don't process the header row, which isn't data
 	if (i == 0)
@@ -110,6 +119,18 @@ var drawChart = function(rows) {
 				.attr("d", function(year) {
 					return line(dataPointsByYear[year]);
 				});
+
+	// the last data point
+	chart.append("circle")
+		.datum(_.last(dataPointsByYear[2015]))
+		.attr("class", "black-dot")
+		.attr("cx", function(d) {
+			return scale.x(d3.time.dayOfYear(d.date));
+		})
+		.attr("cy", function(d) {
+			return scale.y(d.extent);
+		})
+		.attr("r", 2);
 
 	var _1978_2009_byDayOfYear = _.groupBy(_.filter(rows, function(d) {
 		return d.date.getFullYear() <= 2009 && d3.time.dayOfYear(d.date) % 3 == 0;
@@ -218,6 +239,11 @@ var drawChart = function(rows) {
 				}
 			});
 
+	chart.append("path")
+		.attr("class", "black-line")
+		.datum([[388,105], [388,167]])
+		.attr("d", callout_line);
+
 	// 1979 max
 	chart.append("g")
 		.attr("transform", "translate(230,50)")
@@ -225,12 +251,22 @@ var drawChart = function(rows) {
 			.attr("class", "grayer")
 			.text("1979");
 
+	chart.append("path")
+		.attr("class", "grayer-line")
+		.datum([[240,52], [240,62]])
+		.attr("d", callout_line);
+
 	// 1980 min
 	chart.append("g")
 		.attr("transform", "translate(530,265)")
 		.append("text")
 			.attr("class", "grayer")
 			.text("1980");
+
+	chart.append("path")
+		.attr("class", "grayer-line")
+		.datum([[540,267], [540,276]])
+		.attr("d", callout_line);
 
 	// annual max
 	chart.append("g")
@@ -254,6 +290,11 @@ var drawChart = function(rows) {
 				}
 			});
 
+	chart.append("path")
+		.attr("class", "grayer-line")
+		.datum([[190,127], [190,132], [265,132], [265,127]])
+		.attr("d", callout_line);
+
 	// annual min
 	chart.append("g")
 		.attr("transform", "translate(520,180)")
@@ -275,6 +316,11 @@ var drawChart = function(rows) {
 					}
 				}
 			});
+
+	chart.append("path")
+		.attr("class", "grayer-line")
+		.datum([[520,240], [520,235], [585,235], [585,240]])
+		.attr("d", callout_line);
 
 	// 2010-2014 explanation
 	chart.append("g")
@@ -326,12 +372,28 @@ var drawChart = function(rows) {
 				}
 			});
 
+	chart.append("path")
+		.attr("class", "black-line")
+		.datum([[615,400], [561,400], [561,378]])
+		.attr("d", callout_line);
+
+	chart.append("circle")
+		.attr("class", "black-dot")
+		.attr("cx", 561)
+		.attr("cy", 379)
+		.attr("r", 2);
+
 	// 2015
 	chart.append("g")
 		.attr("transform", "translate(120,155)")
 		.append("text")
 			.attr("class", "bold")
 			.text("2015");
+
+	chart.append("path")
+		.attr("class", "black-line")
+		.datum([[138,140], [138,118]])
+		.attr("d", callout_line);
 
 	// 2015 maximum
 	chart.append("g")
@@ -345,6 +407,17 @@ var drawChart = function(rows) {
 		.append("text")
 			.attr("class", "right smaller gray")
 			.text("2015 maximum");
+
+	chart.append("path")
+		.attr("class", "black-line")
+		.datum([[190,45], [190,105]])
+		.attr("d", callout_line);
+
+	chart.append("circle")
+		.attr("class", "white-dot")
+		.attr("cx", 190)
+		.attr("cy", 105)
+		.attr("r", 4);
 };
 
 var final_rows = [];
