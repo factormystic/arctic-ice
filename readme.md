@@ -30,6 +30,9 @@ We'll need to consume the year, month, and day columns for the x-axis and the Ex
 
 Creating each data point looks like this:
 ```js
+// d3 processes csv files according to RFC4180, which says:
+// "Spaces are considered part of a field and should not be ignored."
+// there's weird spacing in the original dataset, hence the weird spaces here
 return {
 	date: new Date(+d["Year"], +d[" Month"], +d[" Day"]),
 	extent: +d["     Extent"],
