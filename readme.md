@@ -1,4 +1,6 @@
-# arctic-ice
+# Arctic Sea Ice
+
+>> See the final product in action here: http://factormystic.net/utils/data-vis/arctic-ice/
 
 This chart is a re-creation of an image posted in the New York Times article "[Arctic Ice Reaches a Low Winter Maximum](http://www.nytimes.com/interactive/2015/03/24/science/earth/arctic-ice-low-winter-maximum.html)".
 (Here is a screenshot of the chart, in case the article becomes unavailable at some point: [link](http://i.imgur.com/TT5RMQz.png))
@@ -527,3 +529,5 @@ var group = {
 ```
 
 Fin.
+
+>> See the final product in action here: http://factormystic.net/utils/data-vis/arctic-ice/
