@@ -27,6 +27,15 @@ These include color of the line (gray for 1978-2009, green for 2010-2014, black 
 Inspecting the Sea Ice Index data, we can see that both the historical and near-real-time datasets follow the same csv column format, which will make it easier for us to process.
 We can use D3's built-in csv functions to load the data files, but we'll want to process the rows a bit.
 We'll need to consume the year, month, and day columns for the x-axis and the Extent column for the y-axis.
+
+Creating each data point looks like this:
+```js
+return {
+	date: new Date(+d["Year"], +d[" Month"], +d[" Day"]),
+	extent: +d["     Extent"],
+};
+```
+
 Any other property we want to show (color, etc) we can accomplish later with just these two values.
 That keeps the data model nice and small.
 Furthermore, I view the data model is philosphically immutable... we'll never go back and change the date or the extent for any object, but we may want to tweak the colors at some later point.
@@ -35,37 +44,70 @@ D3 interprets the csv data values as strings but we can easily translate those t
 
 ~
 
-When building a D3 chart, I like to start with the axis functions, which are D3 [`scale`](https://github.com/mbostock/d3/wiki/Scales) objects.
+When building a D3 chart, I like to start with the scale functions, which are D3 [`scale`](https://github.com/mbostock/d3/wiki/Scales) objects.
 They're a prerequisite for charting any data, and defining them first often helps clarify how the pieces of the chart fit together in code.
 
-The x-axis needs to translate a javascript `Date` to some pixel value from `0` to the width of the chart (linearly).
+Horizontally, we need to translate a javascript `Date` to some pixel value from `0` to the width of the chart (linearly).
 We could use the built in D3 [time scale helper](https://github.com/mbostock/d3/wiki/Time-Scales#scale) right?
 Well, not quite.
 That'd be what we'd want if we had one continuous line from 1978-2015, but actually we want to overlay each year on top of each other.
-That makes our x-axis actually a function of the day of the year
+That makes our x-scale actually a function of the day of the year
 D3 has a helper function to compute d.o.y. given a `Date`: [`d3.time.dayOfYear`](https://github.com/mbostock/d3/wiki/Time-Intervals#dayOfYear).
 With that helper, our domain is `[0, 364]` and our range is `[0px, chart width px]`.
 We don't need a D3 date scale for that... it's just a normal (eg, linear quantitative) scale!
 All we need to do is remember to feed that scale object days of the year instead of the original date property.
 *Later clarifying note: wait, not all years have 365 days! Won't that break the scale? Answer: D3 can extrapolate, but that does mean Dec 31's data points in leap years will be drawn more to the right that we'd expect data to be. Oops.*
 
-The y-axis is also a linear scale from `[0, 18]` million square kilometers to `[chart height px, 0]`.
+The `x` scale:
+```js
+d3.scale.linear()
+	.domain([0, 364])
+	.range([size.padding, size.outer_width-size.padding]),
+```
+
+The vertical y scale is also a linear scale, from `[0, 18]` million square kilometers to `[chart height px, 0]`.
 Remember, `0` is in the upper left.
 D3 has no problem automatically inverting the range for us.
 We should add some padding into those scales so that the chart area has some breathing room.
 A true dynamic chart could read the domain from the dataset, but running a quick check... `d3.max(rows.map(function(d){ return d.extent }))` the max value is `16.635`, well under `18`.
 Also, the original NYT chart has 18 m sq km as the max axis value.
 
+The `y` scale:
+```js
+d3.scale.linear()
+	.domain([0, 18])
+	.range([size.outer_height-size.padding, size.padding]),
+```
+
 ~
 
 That's a lot of talking and not a lot of chart.
 Now that we have scales that can translate model properties of the dataset to pixel position on the screen, lets put them together.
 For that we'll want to use the D3 svg line helper, [`d3.svg.line`](https://github.com/mbostock/d3/wiki/SVG-Shapes#line).
+
+```js
+var line = d3.svg.line()
+	.interpolate("linear")
+	.x(function(d) {
+		return scale.x(d3.time.dayOfYear(d.date));
+	})
+	.y(function(d) {
+		return scale.y(d.extent);
+	});
+```
+
 How it works is, We give it our data, and tell it what the `x` and `y` coordinates of each data point are via the scales we made, and it'll give us a svg `path` element's `d` attribute, which is a string of svg commands to draw the line.
 It's very handy.
 
 Since we want 1 line per year, lets group the data by year.
-Inspecting that grouping we see an 18 element array for 1978 (the first partial data year), a lot of 356/356 element arrays (don't forget leap years **Later note: heh**) and... hold up, a bunch of years only have 182/183 values.
+
+```js
+var dataPointsByYear = _.groupBy(rows, function(d) {
+	return d.date.getFullYear();
+});
+```
+
+Inspecting that grouping we see an 18 element array for 1978 (the first partial data year), a lot of 356/356 element arrays (don't forget leap years *Later note: heh*) and... hold up, a bunch of years only have 182/183 values.
 digging deeper we can see that 1979-1987 doesn't have data for every day
 Is that going to break our chart?
 Nope.
@@ -89,6 +131,12 @@ That means creating a `Date` for February 1st, 1979 like `new Date(1979, 2, 1)` 
 Javascript is absurd.
 That bug is causing some of the data points to be no longer be ordered correctly by time, so the line is doubling back on itself creating a thicker section.
 Subtracting `1` from the month value in the date constructor fixes that issue.
+
+```patch
+-		date: new Date(+d["Year"], +d[" Month"], +d[" Day"]),
++		// javascript's date constructor's month property is 0-based. why. whyyyyyyyyyyyyyyyyyyyyy
++		date: new Date(+d["Year"], +d[" Month"]-1, +d[" Day"]),
+```
 
 Now we have this:
 
@@ -114,7 +162,38 @@ I'm not sure how the NYT chart solved this, but it appears that they have less t
 To guarantee that each year is represented in each average dot, we could interpolate the missing data by combining the most recent available day and the next available day.
 But this chart is more like an executive summary than a research paper, so we're not going to do anything overcomplicated and instead acknowlege that the average line is mildy biased due to the sparse data for 1978-1986.
 
+```js
+var _1978_2009_byDayOfYear = _.groupBy(_.filter(rows, function(d) {
+	return d.date.getFullYear() <= 2009 && d3.time.dayOfYear(d.date) % 3 == 0;
+}), function(d) {
+	return d3.time.dayOfYear(d.date);
+});
+
+var _1978_2009_avg = _.map(_1978_2009_byDayOfYear, function(days, doy) {
+	return {
+		day_of_year: +doy,
+		avg_extent: _.sum(days, 'extent') / days.length,
+	};
+});
+```
+
 To draw the line, we'll project a portion of our average data to SVG `circle`s to match the styling of the original chart.
+
+```js
+chart.selectAll(".average-doy")
+	.data(_1978_2009_avg)
+	.enter()
+		.append("circle")
+			.attr("class", "average-doy")
+			.attr("cx", function(d) {
+				return scale.x(d.day_of_year);
+			})
+			.attr("cy", function(d) {
+				return scale.y(d.avg_extent);
+			})
+			.attr("r", 1.4);
+```
+
 Swap the blue on the other lines for gray (probably should have started with gray), and now we have:
 
 ![screenshot-3](http://i.imgur.com/rqrWQ2w.png)
@@ -127,6 +206,13 @@ Speaking of line coloring, lets figure out light blue for 2010-2014.
 We can apply color selectively by adding a css class to qualifying lines.
 A line is there for each year, so the question then becomes, how do we qualify just the 2010-2014 years?
 We'll use D3's [`classed`](https://github.com/mbostock/d3/wiki/Selections#classed) helper and a simple custom function to check if the year is in range.
+
+*Later note: probably could have just used a simple inequality here rather than listing the years. However, it's worth remembering that the `year` parameter is a string.*
+```js
+.classed("highlight", function(year) {
+	return _.include(["2010", "2011", "2012", "2013", "2014"], year);
+})
+```
 
 Now our chart looks like this:
 
@@ -148,6 +234,12 @@ Reusing both our parsing and drawing functions (but only calling the draw functi
 There's a nuance here to keep in mind while drawing things on top of each other: SVG has a fixed z-order based on the element order in the DOM.
 By concatenating the 2015 data second, we can get it to draw on top of the older data.
 
+```js
+if (final_rows.length && nrt_rows.length) {
+	drawChart([].concat(final_rows, nrt_rows));
+}
+```
+
 Behold:
 
 ![screenshot-5](http://i.imgur.com/ARFDyOA.png)
@@ -155,8 +247,18 @@ Behold:
 ~
 
 Lets add some axes.
+
 We can use D3's built in [SVG generator for axes](https://github.com/mbostock/d3/wiki/SVG-Axes#axis), but we'll need a new scale to translate a date range to pixel values.
 D3 has a built in function for month names, and we can use the [tickFormat](https://github.com/mbostock/d3/wiki/SVG-Axes#tickFormat) helper to format them to abbreviations.
+
+```js
+d3.svg.axis()
+	.scale(scale.x_axis)
+	.orient("bottom")
+	.ticks(d3.time.months)
+	.tickSize(16, 0)
+	.tickFormat(d3.time.format("%b")),
+```
 
 By the way, the original NYT chart mixes HTML for the text and axes with a png background for the chart data.
 Since we're doing it all programmatically in SVG, there's going to be some small layout differences which would be too irritating to match, like only abbreviating **some** of the month names.
@@ -184,6 +286,28 @@ Also, we have the issue of needing to represent "Size of Alaska" at a non-integr
 The D3 axis generator has a [`tickValues`](https://github.com/mbostock/d3/wiki/SVG-Axes#tickValues) function which allows us to specify precisely where we want ticks on an axis.
 We can add `0.424`, `1.723`, and `9.976140` to that array instead of `0`, `2`, and `10` and then make sure to "format" those numbers with their appropriate labels in the tick formatter function.
 
+```js
+d3.svg.axis()
+	.scale(scale.y)
+	.orient("left")
+	.tickValues([0.424, 1.723, 4, 6, 8, 9.976140, 12, 14, 16, 18])
+	.tickFormat(function(d) {
+		switch (d) {
+			case 18:
+				return "18 million\nsq. km";
+			case 9.976140:
+				return "Size of\nCanada";
+			case 1.723:
+				return "Size of\nAlaska";
+			case 0.424:
+				return "Size of\nCalifornia";
+
+			default:
+				return d;
+		}
+	}),
+```
+
 With the custom axes and padding adjustments:
 
 ![screenshot-7](http://i.imgur.com/cmRaKpu.png)
@@ -199,6 +323,31 @@ Additionally, there's no special D3 capabilities here (aside from the normal gen
 
 The general approach is: create a `g` element and position it, then create a `text` element with the callout label, then use the `tspan` helper function from earlier to make it multiline.
 
+*Later note: I probably should have pulled this tspan generator into a separate helper function. Didn't think of it at the time*
+```js
+// chart title
+chart.append("g")
+	.attr("transform", "translate(750,20)")
+	.append("text")
+		.attr("class", "right bold")
+		.text("Yearly fluctuations in area\nof Arctic covered by ice")
+		.each(function() {
+			var el = d3.select(this);
+			var words = d3.select(this).text().split("\n");
+			el.text("");
+
+			for (var i = 0; i < words.length; i++) {
+				var tspan = el.append("tspan")
+					.text(words[i]);
+
+				if (i > 0) {
+					tspan.attr("x", 0)
+						.attr("dy", "15");
+				}
+			}
+		});
+```
+
 After punching all this in, still without the corresponding callout lines:
 
 ![screenshot-8](http://i.imgur.com/ivGVxz9.png)
@@ -206,7 +355,6 @@ After punching all this in, still without the corresponding callout lines:
 Fantastic.
 
 ~
-
 
 Now for the callout lines.
 This is also somewhat tedious, and again if we weren't making this chart programmatically with javascript and SVG, it'd be a lot easier to draw it manually in photoshop.
@@ -216,9 +364,41 @@ This time we'll need to hand enter the appropriate x/y values for each portion o
 We can create 1 new generic line helper for all the callout lines, and pick our own little data model that's easier to hand enter, such as arrays of `[x,y]` coordinates.
 With this method, there's no problem extending the line to have a right angle, as with the 2012 minimum day line and the accent bars next to the min/max callout text.
 
+```js
+var callout_line = d3.svg.line()
+	.interpolate("linear")
+	.x(function(d) {
+		return d[0];
+	})
+	.y(function(d) {
+		return d[1];
+	});
+```
+
+```js
+chart.append("path")
+	.attr("class", "black-line")
+	.datum([[388,105], [388,167]])
+	.attr("d", callout_line);
+```
+
 The last day of the 2015 data, 2015 maximum point, and 2012 lowest point also have dots, the latter two of which are manually constructed.
 
 For the dot on the last day of 2015, we can position it using of the last element in the 2015 data array and use the same old dataset scale to plot it.
+
+```js
+// the last data point
+chart.append("circle")
+	.datum(_.last(dataPointsByYear[2015]))
+	.attr("class", "black-dot")
+	.attr("cx", function(d) {
+		return scale.x(d3.time.dayOfYear(d.date));
+	})
+	.attr("cy", function(d) {
+		return scale.y(d.extent);
+	})
+	.attr("r", 2);
+```
 
 ![screenshot-9](http://i.imgur.com/5MRzGsl.png)
 
@@ -229,18 +409,47 @@ Almost there!
 At this point the only missing elements are the summer/winter season markers above the x-axis.
 SVG supports gradients, but naturally the syntax to do it is bizarre and frustrating.
 I certainly don't know how to do it without google or MDN explaining by example.
+
 The basic syntax is to define the gradient and its stops, then reference it as a rect `fill`.
+
+```js
+// summer season marker
+var winter_gradient = chart.append("defs")
+	.append("linearGradient")
+		.attr("id", "summer")
+		.attr("x1", "0%")
+		.attr("y1", "100%")
+		.attr("x2", "0%")
+		.attr("y2", "5%");
+
+winter_gradient.append("stop")
+	.attr("offset", "0%")
+	.style("stop-color", "rgb(255, 255, 227)");
+
+winter_gradient.append("stop")
+	.attr("offset", "100%")
+	.style("stop-color", "#fff");
+```
 
 For the position of the seasonal rects, we can use the same scale as used for the ice lines, and define the left and width positions in terms of day of the year.
 So for example, the first winter rect starts at `scale.x(0)` and has a width of `scale.x(59) - scale.x(0)`.
 This relative position in days, through our previously defined scale, will output the pixel values we need for precise positioning without having to hand code it.
 Summer extends from day 151-242, so that's `x = scale.x(151)`, `width = scale.x(242) - scale.x(151)`.
 
+```
+chart.append("rect")
+	.attr("x", scale.x(151))
+	.attr("y", scale.y(0)-51)
+	.attr("width", scale.x(242) - scale.x(151))
+	.attr("height", 50)
+	.attr("fill", "url(#summer)");
+```
+
 And now we're all done!
 
 ~
 
-well, almost.
+Well, there's one more thing...
 
 This chart now looks nearly identical to the original (allowing for different font choices and the smaller plot area), but since this is a programmatically generated data driven document, why not have some bonus fun?
 
@@ -291,6 +500,27 @@ Wouldn't it be nice if we could define these 4 lines once, then reuse them for o
 We can do exactly that using d3's [`selection.call`](https://github.com/mbostock/d3/wiki/Selections#call) method.
 It lets us put those 4 transition lines in a helper, then with `call`, we can invoke them on the context with any parameters we need, or in our case, how long to delay.
 
+```js
+chart.selectAll(".year-line")
+// ...snip...
+	.call(fade, function(d) {
+		if (d == 2015)
+			return group.nrt_data;
+		if (d <= 2014 && d >= 2010)
+			return group.recent_data;
+		return group.old_data;
+	});
+```
+
 I've also defined a little "transition group" helper object, so we can tweak the animation timings later in just one place instead of having to carefully find/replace across the program.
+
+```js
+var group = {
+	old_data: 0,
+	recent_data: 4000,
+	nrt_data: 8000,
+	key_points: 12000,
+};
+```
 
 Fin.
